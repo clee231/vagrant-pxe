@@ -3,12 +3,13 @@ Vagrant.configure("2") do |config|
   config.vm.define :server do |server|
 
     # Use debian 10 for server
-    server.vm.box = "generic/debian10"
+    server.vm.box = "generic/ubuntu1804"
     server.vm.hostname = "pxe-server"
+
     # Create a private network without vagrant DHCP
     server.vm.network "private_network",
-      ip: "192.168.0.254",
-      libvirt__network_name: "pxe",
+      ip: "172.31.0.5",
+      libvirt__network_name: "pxedemo",
       libvirt__dhcp_enabled: false
 
     # Configure VM
@@ -21,6 +22,7 @@ Vagrant.configure("2") do |config|
     # Use ansible to install server
     server.vm.provision :ansible do |ansible|
       ansible.playbook = "playbook.yml"
+      ansible.verbose = true
     end
   end
 
@@ -29,7 +31,7 @@ Vagrant.configure("2") do |config|
     client.vm.hostname = "pxe-client"
     # Connect to private server private network
     client.vm.network "private_network",
-      libvirt__network_name: "pxe"
+      libvirt__network_name: "pxedemo"
 
     # Configure VM
     client.vm.provider :libvirt do |libvirt|
@@ -38,18 +40,16 @@ Vagrant.configure("2") do |config|
       libvirt.cpus = '1'
       # Create a disk
       libvirt.storage :file,
-        size: '50G',
+        size: '30G',
         type: 'qcow2',
         bus: 'sata',
         device: 'sda'
-      # Set fr keyboard for vnc connection
-      libvirt.keymap = 'fr'
       # Set pxe network NIC as default boot
-      boot_network = {'network' => 'pxe'}
+      boot_network = {'network' => 'pxedemo'}
       libvirt.boot boot_network
       libvirt.boot 'hd'
       # Set UEFI boot, comment for legacy
-      libvirt.loader = '/usr/share/qemu/OVMF.fd'
+      libvirt.loader = '/usr/share/ovmf/x64/OVMF.fd'
     end
   end
 end

@@ -1,10 +1,9 @@
 #cloud-config
 autoinstall:
   version: 1
-  locale: fr_FR
+  locale: en_US
   keyboard:
-    layout: fr
-    variant: latin9
+    layout: en
   refresh-installer:
     update: yes
   identity:
